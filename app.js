@@ -3,6 +3,8 @@ const SUPABASE_ANON_KEY = window.OMS_CONFIG?.SUPABASE_ANON_KEY || "";
 const TEAM = ["Prafinda", "Ahzka"];
 
 let db = null, currentUser = null, schedules = [], calendarDate = new Date(), selectedDate = null;
+let datePickerMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let selectedDates = new Set();
 const $ = (id) => document.getElementById(id);
 const loginView = $("loginView"), appView = $("appView"), dialog = $("scheduleDialog");
 
@@ -115,6 +117,49 @@ function renderCalendar(){
  }));
 }
 
+function renderOvertimeAnalytics(){
+ const weekdayTotal=schedules.filter(x=>x.overtime_type==="Weekdays").length;
+ const weekendTotal=schedules.filter(x=>x.overtime_type==="Weekend").length;
+ $("analyticsWeekdaysTotal").textContent=weekdayTotal;
+ $("analyticsWeekendTotal").textContent=weekendTotal;
+ $("analyticsGrandTotal").textContent=weekdayTotal+weekendTotal;
+ const chart=$("overtimeChart");
+ if(!schedules.length){
+  chart.innerHTML='<div class="analytics-empty">Belum ada data lembur untuk ditampilkan.</div>';
+  return;
+ }
+ const counts=new Map();
+ schedules.forEach(item=>{
+  const month=item.overtime_date.slice(0,7);
+  if(!counts.has(month))counts.set(month,{Weekdays:0,Weekend:0});
+  const row=counts.get(month);
+  if(item.overtime_type==="Weekdays"||item.overtime_type==="Weekend")row[item.overtime_type]++;
+ });
+ const keys=[...counts.keys()].sort();
+ const first=new Date(keys[0]+"-01T12:00:00");
+ const last=new Date(keys[keys.length-1]+"-01T12:00:00");
+ const months=[];
+ for(let cursor=new Date(first);cursor<=last;cursor.setMonth(cursor.getMonth()+1)){
+  const key=monthValue(cursor);
+  months.push({key,label:new Intl.DateTimeFormat("id-ID",{month:"short",year:"2-digit"}).format(cursor),...(counts.get(key)||{Weekdays:0,Weekend:0})});
+ }
+ const max=Math.max(1,...months.flatMap(x=>[x.Weekdays,x.Weekend]));
+ const width=Math.max(620,months.length*76+56), height=260, top=22, bottom=45, plotH=height-top-bottom;
+ const groupW=(width-48)/months.length, barW=Math.min(20,groupW*.27);
+ const grid=[];
+ for(let tick=0;tick<=4;tick++){
+  const value=Math.ceil(max*tick/4), y=top+plotH-(plotH*tick/4);
+  grid.push(`<line x1="36" y1="${y}" x2="${width-12}" y2="${y}" class="chart-gridline"/><text x="28" y="${y+4}" text-anchor="end" class="chart-y-label">${value}</text>`);
+ }
+ const bars=months.map((m,i)=>{
+  const center=44+i*groupW+groupW/2;
+  const h1=m.Weekdays/max*plotH, h2=m.Weekend/max*plotH;
+  const y1=top+plotH-h1, y2=top+plotH-h2;
+  return `<rect x="${center-barW-2}" y="${y1}" width="${barW}" height="${Math.max(0,h1)}" rx="4" class="chart-bar-weekdays"><title>${m.label}: Weekdays ${m.Weekdays}</title></rect><rect x="${center+2}" y="${y2}" width="${barW}" height="${Math.max(0,h2)}" rx="4" class="chart-bar-weekend"><title>${m.label}: Weekend ${m.Weekend}</title></rect><text x="${center}" y="${height-17}" text-anchor="middle" class="chart-x-label">${escapeHTML(m.label)}</text>`;
+ }).join("");
+ chart.innerHTML=`<div class="chart-scroll"><svg class="chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Grafik batang bulanan Weekdays dan Weekend">${grid.join("")}${bars}</svg></div>`;
+}
+
 function renderTable(){
  const q=$("searchInput").value.trim().toLowerCase(), member=$("memberFilter").value, type=$("typeFilter").value, month=$("listMonth").value;
  const list=schedules.filter(x=>(!q||(x.agenda+" "+x.member).toLowerCase().includes(q))&&(!member||x.member===member)&&(!type||x.overtime_type===type)&&(!month||inMonth(x,month)));
@@ -126,16 +171,96 @@ function renderTable(){
 function renderAll(){
  renderDashboard();
  renderTable();
+ renderOvertimeAnalytics();
+}
+
+function sortedSelectedDates(){
+ return [...selectedDates].sort();
+}
+
+function selectedMembers(){
+ return [...document.querySelectorAll('input[name="scheduleMembers"]:checked')].map(input=>input.value);
+}
+
+function updateBulkPreview(){
+ const dates=sortedSelectedDates();
+ const members=selectedMembers();
+ const count=dates.length*members.length;
+ $("dateSelectionCount").textContent=`${dates.length} tanggal dipilih`;
+ $("memberSelectionCount").textContent=members.length?`${members.length} anggota dipilih`:"Pilih satu atau kedua anggota.";
+ $("bulkPreview").classList.toggle("hidden",!dates.length&&!members.length);
+ if(dates.length&&members.length){
+  $("bulkPreview").textContent=`${dates.length} tanggal × ${members.length} anggota = ${count} jadwal akan dibuat.`;
+ }else if(dates.length||members.length){
+  $("bulkPreview").textContent="Pilih tanggal dan anggota untuk melihat jumlah jadwal.";
+ }else{
+  $("bulkPreview").textContent="";
+ }
+}
+
+function renderDatePicker(){
+ const year=datePickerMonth.getFullYear(), month=datePickerMonth.getMonth();
+ $("datePickerMonth").textContent=new Intl.DateTimeFormat("id-ID",{month:"long",year:"numeric"}).format(datePickerMonth);
+ const first=new Date(year,month,1), start=(first.getDay()+6)%7;
+ const days=new Date(year,month+1,0).getDate();
+ const prevDays=new Date(year,month,0).getDate();
+ const labels=["Sen","Sel","Rab","Kam","Jum","Sab","Min"];
+ let html=labels.map(label=>`<div class="picker-weekday">${label}</div>`).join("");
+ for(let i=0;i<42;i++){
+  const n=i-start+1;
+  let day, outside=false;
+  if(n<1){day=new Date(year,month-1,prevDays+n);outside=true;}
+  else if(n>days){day=new Date(year,month+1,n-days);outside=true;}
+  else day=new Date(year,month,n);
+  const key=dateOnly(day), chosen=selectedDates.has(key), today=key===dateOnly(new Date());
+  html+=`<button type="button" class="picker-day ${outside?"outside":""} ${chosen?"chosen":""} ${today?"today":""}" data-pick-date="${key}" aria-pressed="${chosen}">${day.getDate()}</button>`;
+ }
+ $("datePickerGrid").innerHTML=html;
+ $("datePickerGrid").querySelectorAll("[data-pick-date]").forEach(button=>button.addEventListener("click",()=>{
+  const key=button.dataset.pickDate;
+  if(selectedDates.has(key))selectedDates.delete(key);
+  else selectedDates.add(key);
+  renderDatePicker();
+  renderSelectedDateChips();
+  updateBulkPreview();
+ }));
+}
+
+function renderSelectedDateChips(){
+ const dates=sortedSelectedDates();
+ $("selectedDateChips").innerHTML=dates.length?dates.map(date=>`<button type="button" class="date-chip" data-remove-date="${date}" aria-label="Hapus ${fmtDate(date)}">${fmtDate(date,{day:"2-digit",month:"short"})} <span>×</span></button>`).join(""):'<span class="field-hint">Belum ada tanggal dipilih.</span>';
+ $("selectedDateChips").querySelectorAll("[data-remove-date]").forEach(button=>button.addEventListener("click",()=>{
+  selectedDates.delete(button.dataset.removeDate);
+  renderDatePicker();
+  renderSelectedDateChips();
+  updateBulkPreview();
+ }));
 }
 
 function openForm(item=null){
  $("scheduleForm").reset();
+ const editing=Boolean(item);
  $("scheduleId").value=item?.id||"";
- $("dialogTitle").textContent=item?"Edit schedule":"Add schedule";
+ $("dialogTitle").textContent=editing?"Edit schedule":"Add schedule";
+ $("singleDateField").classList.toggle("hidden",!editing);
+ $("multiDateField").classList.toggle("hidden",editing);
+ $("singleMemberField").classList.toggle("hidden",!editing);
+ $("multiMemberField").classList.toggle("hidden",editing);
+ $("bulkPreview").classList.toggle("hidden",editing);
  $("scheduleDate").value=item?.overtime_date||dateOnly(new Date());
+ $("scheduleDate").required=editing;
  $("scheduleMember").value=item?.member||"";
- $("scheduleType").value=item?.overtime_type||typeFromDate($("scheduleDate").value);
+ $("scheduleMember").required=editing;
+ $("scheduleType").value=item?.overtime_type||"Auto";
  $("scheduleAgenda").value=item?.agenda||"";
+ document.querySelectorAll('input[name="scheduleMembers"]').forEach(input=>input.checked=false);
+ selectedDates=new Set();
+ if(!editing){
+  datePickerMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);
+  renderDatePicker();
+  renderSelectedDateChips();
+  updateBulkPreview();
+ }
  $("formMessage").textContent="";
  dialog.showModal();
 }
@@ -143,27 +268,81 @@ function openForm(item=null){
 async function saveForm(e){
  e.preventDefault();
  const id=$("scheduleId").value;
- const payload={
-  overtime_date:$("scheduleDate").value,
-  member:$("scheduleMember").value,
-  overtime_type:$("scheduleType").value,
-  agenda:$("scheduleAgenda").value.trim(),
-  updated_at:new Date().toISOString()
- };
- if(!payload.overtime_date||!TEAM.includes(payload.member)||!["Weekdays","Weekend"].includes(payload.overtime_type)||!payload.agenda){
-  $("formMessage").textContent="Lengkapi semua data.";
+ const agenda=$("scheduleAgenda").value.trim();
+ const manualType=$("scheduleType").value;
+ if(!agenda){$("formMessage").textContent="Agenda wajib diisi.";return;}
+ if(!["Auto","Weekdays","Weekend"].includes(manualType)){
+  $("formMessage").textContent="Pilih jenis lembur yang valid.";
   return;
  }
- $("saveSchedule").disabled=true;
- const query=id?db.from("overtime_schedules").update(payload).eq("id",id):db.from("overtime_schedules").insert({...payload,created_by:currentUser.id});
- const {error}=await query;
- $("saveSchedule").disabled=false;
- if(error){$("formMessage").textContent=error.message;return;}
- dialog.close();
- toast(id?"Jadwal berhasil diperbarui.":"Jadwal berhasil ditambahkan.");
- await loadSchedules();
-}
 
+ let records=[];
+ if(id){
+  const date=$("scheduleDate").value;
+  const member=$("scheduleMember").value;
+  if(!date||!TEAM.includes(member)){
+   $("formMessage").textContent="Lengkapi tanggal dan anggota.";
+   return;
+  }
+  records=[{
+   overtime_date:date,
+   member,
+   overtime_type:manualType==="Auto"?typeFromDate(date):manualType,
+   agenda,
+   updated_at:new Date().toISOString()
+  }];
+ }else{
+  const dates=sortedSelectedDates();
+  const members=selectedMembers();
+  if(!dates.length||!members.length){
+   $("formMessage").textContent="Pilih minimal satu tanggal dan satu anggota.";
+   return;
+  }
+  records=dates.flatMap(date=>members.map(member=>({
+   overtime_date:date,
+   member,
+   overtime_type:manualType==="Auto"?typeFromDate(date):manualType,
+   agenda,
+   created_by:currentUser.id,
+   updated_at:new Date().toISOString()
+  })));
+ }
+
+ $("saveSchedule").disabled=true;
+ try{
+  if(id){
+   const {error}=await db.from("overtime_schedules").update(records[0]).eq("id",id);
+   if(error)throw error;
+   dialog.close();
+   toast("Jadwal berhasil diperbarui.");
+  }else{
+   // Hindari duplikasi untuk kombinasi tanggal + anggota yang sudah ada.
+   const dates=[...new Set(records.map(record=>record.overtime_date))];
+   const members=[...new Set(records.map(record=>record.member))];
+   const {data:existing,error:lookupError}=await db.from("overtime_schedules")
+    .select("overtime_date,member")
+    .in("overtime_date",dates)
+    .in("member",members);
+   if(lookupError)throw lookupError;
+   const existingKeys=new Set((existing||[]).map(row=>`${row.overtime_date}|${row.member}`));
+   const newRecords=records.filter(record=>!existingKeys.has(`${record.overtime_date}|${record.member}`));
+   const skipped=records.length-newRecords.length;
+   if(!newRecords.length){
+    $("formMessage").textContent="Semua kombinasi tanggal dan anggota yang dipilih sudah memiliki jadwal. Tidak ada data baru yang disimpan.";
+    return;
+   }
+   const {error}=await db.from("overtime_schedules").insert(newRecords);
+   if(error)throw error;
+   dialog.close();
+   toast(skipped?`${newRecords.length} jadwal ditambahkan; ${skipped} duplikat dilewati.`:`${newRecords.length} jadwal berhasil ditambahkan.`);
+  }
+  await loadSchedules();
+ }catch(error){
+  $("formMessage").textContent=error.message||"Terjadi kesalahan saat menyimpan jadwal.";
+ }finally{
+  $("saveSchedule").disabled=false;
+ }
+}
 async function deleteSchedule(id){
  if(!confirm("Hapus jadwal lembur ini?"))return;
  const {error}=await db.from("overtime_schedules").delete().eq("id",id);
@@ -208,9 +387,21 @@ async function init(){
 }
 
 $("scheduleForm").addEventListener("submit",saveForm);
-$("scheduleDate").addEventListener("change",()=>{
- $("scheduleType").value=typeFromDate($("scheduleDate").value);
+$("datePrevMonth").addEventListener("click",()=>{
+ datePickerMonth=new Date(datePickerMonth.getFullYear(),datePickerMonth.getMonth()-1,1);
+ renderDatePicker();
 });
+$("dateNextMonth").addEventListener("click",()=>{
+ datePickerMonth=new Date(datePickerMonth.getFullYear(),datePickerMonth.getMonth()+1,1);
+ renderDatePicker();
+});
+$("clearSelectedDates").addEventListener("click",()=>{
+ selectedDates.clear();
+ renderDatePicker();
+ renderSelectedDateChips();
+ updateBulkPreview();
+});
+document.querySelectorAll('input[name="scheduleMembers"]').forEach(input=>input.addEventListener("change",updateBulkPreview));
 $("closeDialog").addEventListener("click",()=>dialog.close());
 $("cancelDialog").addEventListener("click",()=>dialog.close());
 $("quickAdd").addEventListener("click",()=>openForm());

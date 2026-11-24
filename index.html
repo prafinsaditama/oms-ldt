@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10233f">
   <title>OMS LDT | Overtime Management System</title>
+  <link rel="icon" type="image/svg+xml" href="clock.svg">
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div id="loginView" class="login-wrap">
     <section class="login-card">
-      <div class="brand-mark">OMS<span>LDT</span></div>
+      <div class="brand-mark"><img src="clock.svg" alt="" class="brand-clock">OMS<span>LDT</span></div>
       <p class="eyebrow">OVERTIME MANAGEMENT SYSTEM</p>
       <h1>Sign in to your workspace</h1>
       <p class="muted">Masuk untuk mengelola jadwal lemburmu.</p>
@@ -27,7 +28,7 @@
 
   <div id="appView" class="app-shell hidden">
     <aside class="sidebar">
-      <div class="brand"><div class="brand-icon">O</div><div><strong>OMS LDT</strong><small>Overtime Management</small></div></div>
+      <div class="brand"><div class="brand-icon"><img src="clock.svg" alt="OMS LDT"></div><div><strong>OMS LDT</strong><small>Overtime Management</small></div></div>
       <div class="nav-label">WORKSPACE</div>
       <button class="nav-item active" data-page="dashboard"><span>▦</span> Dashboard</button>
       <button class="nav-item" data-page="schedules"><span>▤</span> Overtime Schedule</button>
@@ -71,6 +72,16 @@
       </section>
 
       <section id="schedulesPage" class="page hidden">
+        <section class="panel analytics-panel">
+          <div class="panel-heading analytics-heading"><div><h3>Monthly overtime analytics</h3><p class="muted">Jumlah jadwal lembur per bulan, dipisahkan berdasarkan jenis lembur.</p></div><span class="analytics-unit">Unit: jadwal</span></div>
+          <div class="analytics-summary">
+            <article class="analytics-stat"><span>Total Weekdays</span><strong id="analyticsWeekdaysTotal">0</strong></article>
+            <article class="analytics-stat"><span>Total Weekend</span><strong id="analyticsWeekendTotal">0</strong></article>
+            <article class="analytics-stat overall"><span>Total seluruh lembur</span><strong id="analyticsGrandTotal">0</strong></article>
+          </div>
+          <div id="overtimeChart" class="overtime-chart" role="img" aria-label="Grafik jumlah jadwal lembur bulanan untuk Weekdays dan Weekend"></div>
+          <div class="analytics-legend"><span><i class="legend-dot weekdays-dot"></i>Weekdays</span><span><i class="legend-dot weekend-dot"></i>Weekend</span></div>
+        </section>
         <div class="list-toolbar"><div><h2>All schedules</h2><p class="muted">Kelola seluruh agenda lembur tim.</p></div><button class="primary" id="addSchedule">＋ Add Schedule</button></div>
         <div class="filters">
           <input id="searchInput" type="search" placeholder="Cari agenda atau nama anggota…">
@@ -88,9 +99,37 @@
     <form id="scheduleForm" method="dialog">
       <div class="dialog-heading"><div><p class="eyebrow">OVERTIME ENTRY</p><h2 id="dialogTitle">Add schedule</h2></div><button type="button" id="closeDialog" class="icon-btn" aria-label="Tutup">×</button></div>
       <input type="hidden" id="scheduleId">
-      <label>Tanggal lembur<input id="scheduleDate" type="date" required></label>
-      <label>Nama anggota<select id="scheduleMember" required><option value="">Pilih anggota</option><option>Prafinda</option><option>Ahzka</option></select></label>
-      <label>Jenis lembur<select id="scheduleType" required><option value="">Pilih jenis</option><option>Weekdays</option><option>Weekend</option></select><small class="field-hint">Jenis terisi otomatis mengikuti hari pada tanggal yang dipilih. Bisa diubah manual.</small></label>
+      <div id="singleDateField">
+        <label>Tanggal lembur<input id="scheduleDate" type="date"></label>
+      </div>
+      <section id="multiDateField" class="multi-picker-section">
+        <div class="picker-title-row"><strong>Tanggal lembur</strong><span id="dateSelectionCount" class="selection-count">0 tanggal dipilih</span></div>
+        <div class="multi-calendar">
+          <div class="multi-calendar-head">
+            <button type="button" id="datePrevMonth" class="icon-btn" aria-label="Bulan sebelumnya">‹</button>
+            <strong id="datePickerMonth"></strong>
+            <button type="button" id="dateNextMonth" class="icon-btn" aria-label="Bulan berikutnya">›</button>
+          </div>
+          <div id="datePickerGrid" class="multi-calendar-grid"></div>
+        </div>
+        <div class="selection-footer">
+          <div id="selectedDateChips" class="selected-chips"><span class="field-hint">Belum ada tanggal dipilih.</span></div>
+          <button type="button" id="clearSelectedDates" class="text-btn">Hapus pilihan</button>
+        </div>
+      </section>
+      <div id="singleMemberField">
+        <label>Nama anggota<select id="scheduleMember"><option value="">Pilih anggota</option><option>Prafinda</option><option>Ahzka</option></select></label>
+      </div>
+      <fieldset id="multiMemberField" class="member-picker">
+        <legend>Nama anggota</legend>
+        <div class="member-options">
+          <label class="member-option"><input type="checkbox" name="scheduleMembers" value="Prafinda"><span class="member-color pra"></span>Prafinda</label>
+          <label class="member-option"><input type="checkbox" name="scheduleMembers" value="Ahzka"><span class="member-color ahz"></span>Ahzka</label>
+        </div>
+        <small id="memberSelectionCount" class="field-hint">Pilih satu atau kedua anggota.</small>
+      </fieldset>
+      <label>Jenis lembur<select id="scheduleType" required><option value="Auto">Otomatis (sesuai tanggal)</option><option value="Weekdays">Weekdays</option><option value="Weekend">Weekend</option></select><small class="field-hint">Mode otomatis menentukan Weekdays atau Weekend untuk setiap tanggal. Bisa diubah manual untuk semua jadwal yang dibuat.</small></label>
+      <div id="bulkPreview" class="bulk-preview hidden" aria-live="polite"></div>
       <label>Agenda / pekerjaan<textarea id="scheduleAgenda" rows="4" maxlength="1000" required placeholder="Contoh: Regression testing NDP release…"></textarea></label>
       <p id="formMessage" class="message" aria-live="polite"></p>
       <div class="dialog-actions"><button type="button" id="cancelDialog" class="secondary">Cancel</button><button type="submit" id="saveSchedule" class="primary">Save schedule</button></div>

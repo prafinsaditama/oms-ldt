@@ -9,3 +9,65 @@
 .schedule-dialog{border:0;border-radius:15px;padding:0;width:min(100% - 28px,480px);box-shadow:0 20px 70px #10233f35}.schedule-dialog::backdrop{background:#10233f75;backdrop-filter:blur(2px)}.schedule-dialog form{padding:25px;display:grid;gap:15px}.dialog-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}.dialog-heading h2{font:800 20px Manrope;margin:0;color:var(--navy)}.schedule-dialog label{font-size:12px}.schedule-dialog textarea{resize:vertical}.field-hint{font-weight:400;color:#98a2b3;font-size:10px;line-height:1.4}.dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:4px}.secondary{border:1px solid var(--line);background:white;color:#475467;border-radius:9px;padding:10px 15px;font-weight:600}.toast{position:fixed;bottom:22px;right:22px;background:var(--navy);color:white;padding:12px 17px;border-radius:9px;box-shadow:0 8px 25px #10233f30;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;z-index:10;font-size:12px}.toast.show{opacity:1;transform:translateY(0)}
 @media(max-width:1050px){.sidebar{width:205px}.main{padding:25px 22px}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.content-grid{grid-template-columns:1fr}.upcoming-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.app-shell{display:block}.sidebar{width:100%;padding:12px 14px;display:grid;grid-template-columns:1fr auto;align-items:center}.brand{padding:0}.brand-icon{width:32px;height:32px}.nav-label,.sidebar-bottom{display:none}.sidebar .nav-item{display:none}.main{padding:20px 14px}.topbar{align-items:flex-start}.topbar h1{font-size:21px}.top-actions{gap:8px;flex-direction:column-reverse;align-items:flex-end}.sync-pill{display:none}.top-actions .primary{font-size:11px;padding:9px 11px}.welcome-row,.list-toolbar{align-items:flex-start;flex-direction:column}.month-picker{width:100%;justify-content:space-between}.stats-grid{gap:9px}.stat-card{padding:13px}.stat-card>strong{font-size:24px}.content-grid{display:block}.panel{padding:13px}.day-cell{min-height:48px;padding:4px;font-size:10px}.day-dots{margin-top:5px}.upcoming-list{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}.filters input:first-child{grid-column:1/-1}.calendar-controls{gap:6px}.panel-heading{align-items:flex-start}.login-card{padding:27px}.dialog-actions button{flex:1}}
+
+/* Multi-date and multi-member schedule entry */
+.schedule-dialog{width:min(100% - 28px,560px);max-height:92vh;overflow-y:auto}
+.schedule-dialog form{gap:13px}
+.multi-picker-section{display:grid;gap:9px}
+.picker-title-row,.multi-calendar-head,.selection-footer{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.picker-title-row{font-size:12px;font-weight:600;color:#344054}
+.selection-count{font-size:11px;color:var(--blue);font-weight:700}
+.multi-calendar{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff}
+.multi-calendar-head{justify-content:center;margin-bottom:8px;color:var(--navy);font-size:12px}
+.multi-calendar-head .icon-btn:first-child{margin-right:auto}
+.multi-calendar-head .icon-btn:last-child{margin-left:auto}
+.multi-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.picker-weekday{text-align:center;padding:5px 0;color:#98a2b3;font-size:10px;font-weight:700}
+.picker-day{height:34px;border:1px solid transparent;border-radius:7px;background:#fff;color:#344054;font-size:11px}
+.picker-day:hover{border-color:#8bb4e4;background:#f7fbff}
+.picker-day.outside{color:#b8c0cc}
+.picker-day.today{border-color:var(--blue);font-weight:800}
+.picker-day.chosen{background:#3478c7;border-color:#3478c7;color:#fff;font-weight:800}
+.selection-footer{align-items:flex-start;flex-wrap:wrap}
+.selected-chips{display:flex;gap:5px;flex-wrap:wrap;flex:1;min-width:0}
+.date-chip{border:1px solid #cfe0f5;background:#edf5ff;color:#2867ae;border-radius:20px;padding:4px 8px;font-size:10px;font-weight:700}
+.date-chip span{margin-left:4px;font-size:13px}
+.selection-footer>.text-btn{white-space:nowrap}
+.member-picker{border:0;padding:0;margin:0;min-width:0}
+.member-picker legend{font-size:12px;font-weight:600;color:#344054;margin-bottom:8px}
+.member-options{display:flex;gap:10px;flex-wrap:wrap}
+.member-option{display:flex!important;align-items:center!important;gap:8px!important;border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:#fff;min-width:130px;cursor:pointer}
+.member-option:has(input:checked){border-color:#8bb4e4;background:#f5f9ff}
+.member-option input{accent-color:var(--blue);width:15px;height:15px;margin:0}
+.member-color{width:8px;height:8px;border-radius:50%;display:inline-block}
+.member-color.pra{background:#3478c7}.member-color.ahz{background:#8a6bd1}
+.member-picker .field-hint{display:block;margin-top:7px}
+.bulk-preview{border:1px solid #cfe0f5;background:#f3f8ff;color:#285987;border-radius:8px;padding:9px 11px;font-size:11px;font-weight:600}
+@media(max-width:700px){.schedule-dialog{max-height:94vh}.schedule-dialog form{padding:18px}.picker-day{height:32px}.member-option{flex:1;min-width:110px}}
+
+
+/* Clock identity and monthly overtime analytics */
+.brand-icon{overflow:hidden;padding:5px}
+.brand-icon img{width:100%;height:100%;display:block}
+.brand-mark{display:flex;align-items:center;gap:9px}
+.brand-clock{width:34px;height:34px;object-fit:contain}
+.analytics-panel{margin-bottom:17px}
+.analytics-heading{margin-bottom:14px}
+.analytics-unit{font-size:10px;color:#667085;background:#f5f7fb;border:1px solid var(--line);padding:6px 9px;border-radius:20px;white-space:nowrap}
+.analytics-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.analytics-stat{border:1px solid var(--line);border-radius:9px;padding:12px 14px;background:#fbfcfe}
+.analytics-stat span{display:block;color:#667085;font-size:10px;font-weight:600}
+.analytics-stat strong{display:block;margin-top:5px;color:var(--navy);font:800 22px Manrope}
+.analytics-stat.overall{background:#f1f6fd;border-color:#d8e6f8}
+.overtime-chart{min-height:130px;border:1px solid #edf0f5;border-radius:9px;background:#fff;padding:10px 8px 2px}
+.chart-scroll{width:100%;overflow-x:auto;overflow-y:hidden}
+.chart-svg{display:block;width:100%;min-width:560px;height:260px}
+.chart-gridline{stroke:#edf0f5;stroke-width:1}
+.chart-y-label,.chart-x-label{fill:#8994a5;font:10px 'DM Sans',sans-serif}
+.chart-bar-weekdays{fill:#3478c7}
+.chart-bar-weekend{fill:#e39a36}
+.analytics-legend{display:flex;gap:16px;margin-top:10px;color:#667085;font-size:10px}
+.analytics-legend span{display:flex;align-items:center;gap:6px}
+.weekdays-dot{background:#3478c7}.weekend-dot{background:#e39a36}
+.analytics-empty{min-height:130px;display:grid;place-items:center;color:#98a2b3;font-size:12px}
+@media(max-width:700px){.analytics-summary{grid-template-columns:1fr 1fr}.analytics-stat.overall{grid-column:1/-1}.analytics-heading{align-items:flex-start}.analytics-unit{font-size:9px}.chart-svg{min-width:520px}}
