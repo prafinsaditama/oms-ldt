@@ -117,7 +117,17 @@ function renderCalendar(){
  }));
 }
 
+function isReimbursementEligible(item){ return item.overtime_type === "Weekdays" && item.work_location === "WFO"; }
+function reimbursementLabel(item){
+ if(!isReimbursementEligible(item)) return "N/A";
+ const labels={not_submitted:"Belum Diajukan",processing:"Proses",done:"Done"};
+ return labels[item.reimbursement_status||"not_submitted"]||"Belum Diajukan";
+}
 function renderOvertimeAnalytics(){
+ const eligibleRows=schedules.filter(isReimbursementEligible);
+ $("reimbNotSubmitted").textContent=eligibleRows.filter(x=>(x.reimbursement_status||"not_submitted")==="not_submitted").length;
+ $("reimbProcessing").textContent=eligibleRows.filter(x=>x.reimbursement_status==="processing").length;
+ $("reimbDone").textContent=eligibleRows.filter(x=>x.reimbursement_status==="done").length;
  const weekdayTotal=schedules.filter(x=>x.overtime_type==="Weekdays").length;
  const weekendTotal=schedules.filter(x=>x.overtime_type==="Weekend").length;
  $("analyticsWeekdaysTotal").textContent=weekdayTotal;
@@ -163,7 +173,7 @@ function renderOvertimeAnalytics(){
 function renderTable(){
  const q=$("searchInput").value.trim().toLowerCase(), member=$("memberFilter").value, type=$("typeFilter").value, month=$("listMonth").value;
  const list=schedules.filter(x=>(!q||(x.agenda+" "+x.member).toLowerCase().includes(q))&&(!member||x.member===member)&&(!type||x.overtime_type===type)&&(!month||inMonth(x,month)));
- $("scheduleRows").innerHTML=list.length?list.map(x=>`<tr><td>${fmtDate(x.overtime_date)}</td><td><span class="member-pill ${x.member==="Ahzka"?"ahzka":""}"><i></i>${escapeHTML(x.member)}</span></td><td><span class="tag ${x.overtime_type==="Weekend"?"weekend":""}">${escapeHTML(x.overtime_type)}</span></td><td class="agenda-cell">${escapeHTML(x.agenda)}</td><td><div class="row-actions"><button class="text-btn" data-edit="${x.id}">Edit</button><button class="text-btn delete" data-delete="${x.id}">Delete</button></div></td></tr>`).join(""):'<tr><td colspan="5" class="empty-state">Tidak ada jadwal yang cocok.</td></tr>';
+ $("scheduleRows").innerHTML=list.length?list.map(x=>`<tr><td>${fmtDate(x.overtime_date)}</td><td><span class="member-pill ${x.member==="Ahzka"?"ahzka":""}"><i></i>${escapeHTML(x.member)}</span></td><td><span class="tag ${x.overtime_type==="Weekend"?"weekend":""}">${escapeHTML(x.overtime_type)}</span></td><td><span class="location-pill">${escapeHTML(x.work_location||"Belum diisi")}</span></td><td class="agenda-cell">${escapeHTML(x.agenda)}</td><td><span class="reimbursement-pill">${reimbursementLabel(x)}</span>${isReimbursementEligible(x)&&x.reimbursement_submitted_at?`<small class="table-subtext">Ajukan: ${fmtDate(x.reimbursement_submitted_at)}</small>`:""}${x.reimbursement_status==="done"&&x.reimbursement_received_at?`<small class="table-subtext">Terima: ${fmtDate(x.reimbursement_received_at)}</small>`:""}</td><td><div class="row-actions"><button class="text-btn" data-edit="${x.id}">Edit</button><button class="text-btn delete" data-delete="${x.id}">Delete</button></div></td></tr>`).join(""):'<tr><td colspan="7" class="empty-state">Tidak ada jadwal yang cocok.</td></tr>';
  $("scheduleRows").querySelectorAll("[data-edit]").forEach(b=>b.addEventListener("click",()=>openForm(schedules.find(x=>String(x.id)===b.dataset.edit))));
  $("scheduleRows").querySelectorAll("[data-delete]").forEach(b=>b.addEventListener("click",()=>deleteSchedule(b.dataset.delete)));
 }
@@ -246,11 +256,17 @@ function openForm(item=null){
  $("multiDateField").classList.toggle("hidden",editing);
  $("singleMemberField").classList.toggle("hidden",!editing);
  $("multiMemberField").classList.toggle("hidden",editing);
+ $("singleLocationField").classList.toggle("hidden",!editing);
+ $("reimbursementEditFields").classList.toggle("hidden",!editing);
  $("bulkPreview").classList.toggle("hidden",editing);
  $("scheduleDate").value=item?.overtime_date||dateOnly(new Date());
  $("scheduleDate").required=editing;
  $("scheduleMember").value=item?.member||"";
  $("scheduleMember").required=editing;
+ $("scheduleLocation").value=item?.work_location||"";
+ $("reimbursementStatus").value=item?.reimbursement_status||"not_submitted";
+ $("reimbursementSubmittedAt").value=item?.reimbursement_submitted_at||"";
+ $("reimbursementReceivedAt").value=item?.reimbursement_received_at||"";
  $("scheduleType").value=item?.overtime_type||"Auto";
  $("scheduleAgenda").value=item?.agenda||"";
  document.querySelectorAll('input[name="scheduleMembers"]').forEach(input=>input.checked=false);
@@ -280,15 +296,26 @@ async function saveForm(e){
  if(id){
   const date=$("scheduleDate").value;
   const member=$("scheduleMember").value;
-  if(!date||!TEAM.includes(member)){
+  if(!date||!TEAM.includes(member)||!$("scheduleLocation").value){
    $("formMessage").textContent="Lengkapi tanggal dan anggota.";
    return;
   }
+  const selectedType=manualType==="Auto"?typeFromDate(date):manualType;
+  const eligible=selectedType==="Weekdays" && $("scheduleLocation").value==="WFO";
+  const status=$("reimbursementStatus").value;
+  const submitted=$("reimbursementSubmittedAt").value;
+  const received=$("reimbursementReceivedAt").value;
+  if(eligible && status!=="not_submitted" && !submitted){$("formMessage").textContent="Tanggal pengajuan wajib diisi untuk status Proses atau Done.";return;}
+  if(eligible && status==="done" && !received){$("formMessage").textContent="Tanggal dana diterima wajib diisi untuk status Done.";return;}
   records=[{
    overtime_date:date,
    member,
    overtime_type:manualType==="Auto"?typeFromDate(date):manualType,
+   work_location:$("scheduleLocation").value,
    agenda,
+   reimbursement_status: (manualType==="Auto"?typeFromDate(date):manualType)==="Weekdays" && $("scheduleLocation").value==="WFO" ? $("reimbursementStatus").value : null,
+   reimbursement_submitted_at: (manualType==="Auto"?typeFromDate(date):manualType)==="Weekdays" && $("scheduleLocation").value==="WFO" ? ($("reimbursementSubmittedAt").value||null) : null,
+   reimbursement_received_at: (manualType==="Auto"?typeFromDate(date):manualType)==="Weekdays" && $("scheduleLocation").value==="WFO" ? ($("reimbursementReceivedAt").value||null) : null,
    updated_at:new Date().toISOString()
   }];
  }else{
@@ -302,6 +329,10 @@ async function saveForm(e){
    overtime_date:date,
    member,
    overtime_type:manualType==="Auto"?typeFromDate(date):manualType,
+   work_location:document.querySelector(`.member-location[data-member="${member}"]`).value,
+   reimbursement_status:(manualType==="Auto"?typeFromDate(date):manualType)==="Weekdays" && document.querySelector(`.member-location[data-member="${member}"]`).value==="WFO" ? "not_submitted" : null,
+   reimbursement_submitted_at:null,
+   reimbursement_received_at:null,
    agenda,
    created_by:currentUser.id,
    updated_at:new Date().toISOString()
@@ -387,6 +418,11 @@ async function init(){
 }
 
 $("scheduleForm").addEventListener("submit",saveForm);
+$("reimbursementStatus").addEventListener("change",()=>{
+ const status=$("reimbursementStatus").value;
+ $("reimbursementSubmittedAt").required=status!=="not_submitted";
+ $("reimbursementReceivedAt").required=status==="done";
+});
 $("datePrevMonth").addEventListener("click",()=>{
  datePickerMonth=new Date(datePickerMonth.getFullYear(),datePickerMonth.getMonth()-1,1);
  renderDatePicker();

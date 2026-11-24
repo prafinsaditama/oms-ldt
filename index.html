@@ -81,6 +81,7 @@
           </div>
           <div id="overtimeChart" class="overtime-chart" role="img" aria-label="Grafik jumlah jadwal lembur bulanan untuk Weekdays dan Weekend"></div>
           <div class="analytics-legend"><span><i class="legend-dot weekdays-dot"></i>Weekdays</span><span><i class="legend-dot weekend-dot"></i>Weekend</span></div>
+          <div class="reimbursement-summary"><h3>Meal reimbursement monitoring</h3><div class="analytics-summary"><article class="analytics-stat"><span>Belum diajukan</span><strong id="reimbNotSubmitted">0</strong></article><article class="analytics-stat"><span>Dalam proses</span><strong id="reimbProcessing">0</strong></article><article class="analytics-stat overall"><span>Done</span><strong id="reimbDone">0</strong></article></div></div>
         </section>
         <div class="list-toolbar"><div><h2>All schedules</h2><p class="muted">Kelola seluruh agenda lembur tim.</p></div><button class="primary" id="addSchedule">＋ Add Schedule</button></div>
         <div class="filters">
@@ -89,7 +90,7 @@
           <select id="typeFilter"><option value="">Semua jenis</option><option>Weekdays</option><option>Weekend</option></select>
           <input id="listMonth" type="month" aria-label="Filter bulan">
         </div>
-        <div class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>Tanggal</th><th>Anggota</th><th>Jenis</th><th>Agenda</th><th class="actions-head">Aksi</th></tr></thead><tbody id="scheduleRows"><tr><td colspan="5" class="empty-state">Belum ada data.</td></tr></tbody></table></div></div>
+        <div class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>Tanggal</th><th>Anggota</th><th>Jenis</th><th>Lokasi</th><th>Agenda</th><th>Reimbursement</th><th class="actions-head">Aksi</th></tr></thead><tbody id="scheduleRows"><tr><td colspan="7" class="empty-state">Belum ada data.</td></tr></tbody></table></div></div>
       </section>
       <footer>OMS LDT <span>•</span> Shared team workspace</footer>
     </main>
@@ -123,11 +124,13 @@
       <fieldset id="multiMemberField" class="member-picker">
         <legend>Nama anggota</legend>
         <div class="member-options">
-          <label class="member-option"><input type="checkbox" name="scheduleMembers" value="Prafinda"><span class="member-color pra"></span>Prafinda</label>
-          <label class="member-option"><input type="checkbox" name="scheduleMembers" value="Ahzka"><span class="member-color ahz"></span>Ahzka</label>
+          <div class="member-option"><label><input type="checkbox" name="scheduleMembers" value="Prafinda"><span class="member-color pra"></span>Prafinda</label><select class="member-location" data-member="Prafinda" aria-label="Lokasi Prafinda"><option value="WFO">WFO</option><option value="WFH">WFH</option></select></div>
+          <div class="member-option"><label><input type="checkbox" name="scheduleMembers" value="Ahzka"><span class="member-color ahz"></span>Ahzka</label><select class="member-location" data-member="Ahzka" aria-label="Lokasi Ahzka"><option value="WFO">WFO</option><option value="WFH">WFH</option></select></div>
         </div>
         <small id="memberSelectionCount" class="field-hint">Pilih satu atau kedua anggota.</small>
       </fieldset>
+      <div id="singleLocationField"><label>Lokasi kerja<select id="scheduleLocation"><option value="WFO">WFO</option><option value="WFH">WFH</option><option value="">Belum diisi</option></select></label></div>
+      <section id="reimbursementEditFields" class="reimbursement-fields hidden"><h3>Meal reimbursement</h3><label>Status reimbursement<select id="reimbursementStatus"><option value="not_submitted">Belum Diajukan</option><option value="processing">Proses</option><option value="done">Done</option></select></label><label>Tanggal pengajuan<input id="reimbursementSubmittedAt" type="date"></label><label>Tanggal dana diterima<input id="reimbursementReceivedAt" type="date"></label><small class="field-hint">Hanya berlaku untuk lembur Weekdays dengan lokasi WFO.</small></section>
       <label>Jenis lembur<select id="scheduleType" required><option value="Auto">Otomatis (sesuai tanggal)</option><option value="Weekdays">Weekdays</option><option value="Weekend">Weekend</option></select><small class="field-hint">Mode otomatis menentukan Weekdays atau Weekend untuk setiap tanggal. Bisa diubah manual untuk semua jadwal yang dibuat.</small></label>
       <div id="bulkPreview" class="bulk-preview hidden" aria-live="polite"></div>
       <label>Agenda / pekerjaan<textarea id="scheduleAgenda" rows="4" maxlength="1000" required placeholder="Contoh: Regression testing NDP release…"></textarea></label>

@@ -71,3 +71,17 @@
 .weekdays-dot{background:#3478c7}.weekend-dot{background:#e39a36}
 .analytics-empty{min-height:130px;display:grid;place-items:center;color:#98a2b3;font-size:12px}
 @media(max-width:700px){.analytics-summary{grid-template-columns:1fr 1fr}.analytics-stat.overall{grid-column:1/-1}.analytics-heading{align-items:flex-start}.analytics-unit{font-size:9px}.chart-svg{min-width:520px}}
+
+/* Work location and meal reimbursement */
+.member-location{margin-left:auto;max-width:88px;padding:5px 6px;border:1px solid var(--line);border-radius:7px;background:#fff;color:#344054;font-size:10px}
+.member-option{min-width:180px}
+.reimbursement-fields{display:grid;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#fbfcfe}
+.reimbursement-fields h3,.reimbursement-summary h3{margin:0;color:var(--navy);font-size:12px}
+.reimbursement-summary{border-top:1px solid var(--line);margin-top:15px;padding-top:14px}
+.location-pill,.reimbursement-pill{display:inline-flex;padding:4px 8px;border-radius:20px;background:#f1f5f9;color:#475467;font-size:10px;font-weight:700;white-space:nowrap}
+.reimbursement-pill{background:#eef5ff;color:#285987}
+.table-subtext{display:block;margin-top:4px;color:#98a2b3;font-size:9px;white-space:nowrap}
+@media(max-width:700px){.member-option{min-width:100%;}.member-location{max-width:100px}}
+
+.member-option{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.member-option>label{display:flex;align-items:center;gap:8px;margin:0;cursor:pointer}
