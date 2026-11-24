@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10233f">
+  <title>OMS LDT | Overtime Management System</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div id="loginView" class="login-wrap">
+    <section class="login-card">
+      <div class="brand-mark">OMS<span>LDT</span></div>
+      <p class="eyebrow">OVERTIME MANAGEMENT SYSTEM</p>
+      <h1>Sign in to your workspace</h1>
+      <p class="muted">Masuk untuk mengelola jadwal lembur tim LDT.</p>
+      <form id="loginForm">
+        <label>Email<input id="email" type="email" autocomplete="username" required placeholder="nama@perusahaan.com"></label>
+        <label>Password<input id="password" type="password" autocomplete="current-password" required placeholder="Password"></label>
+        <button class="primary full" type="submit">Login</button>
+      </form>
+      <p id="loginMessage" class="message" aria-live="polite"></p>
+      <p class="tiny muted">Akses hanya untuk akun Prafinda dan Ahzka yang telah dibuat di Supabase.</p>
+    </section>
+  </div>
+
+  <div id="appView" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-icon">O</div><div><strong>OMS LDT</strong><small>Overtime Management</small></div></div>
+      <div class="nav-label">WORKSPACE</div>
+      <button class="nav-item active" data-page="dashboard"><span>▦</span> Dashboard</button>
+      <button class="nav-item" data-page="schedules"><span>▤</span> Overtime Schedule</button>
+      <div class="sidebar-bottom">
+        <div class="user-chip"><div class="avatar" id="userAvatar">U</div><div class="user-meta"><strong id="userName">User</strong><small id="userEmail"></small></div></div>
+        <button id="logoutBtn" class="logout">↪ Sign out</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><p class="eyebrow">LDT WORKSPACE</p><h1 id="pageTitle">Dashboard</h1></div>
+        <div class="top-actions"><span class="sync-pill"><i></i> Shared workspace</span><button class="primary" id="quickAdd">＋ Add Schedule</button></div>
+      </header>
+
+      <section id="dashboardPage" class="page">
+        <div class="welcome-row"><div><h2>Team overview</h2><p class="muted">Ringkasan jadwal lembur tim LDT.</p></div>
+          <label class="month-picker">Periode <input id="dashboardMonth" type="month"></label>
+        </div>
+        <div class="stats-grid">
+          <article class="stat-card"><div class="stat-top"><span>Total schedules</span><b class="stat-icon">▦</b></div><strong id="totalStat">0</strong><small>Jadwal pada periode terpilih</small></article>
+          <article class="stat-card"><div class="stat-top"><span>Prafinda</span><b class="stat-icon blue">P</b></div><strong id="prafindaStat">0</strong><small>Jadwal lembur</small></article>
+          <article class="stat-card"><div class="stat-top"><span>Ahzka</span><b class="stat-icon violet">A</b></div><strong id="ahzkaStat">0</strong><small>Jadwal lembur</small></article>
+          <article class="stat-card"><div class="stat-top"><span>Weekend</span><b class="stat-icon orange">W</b></div><strong id="weekendStat">0</strong><small>Jadwal Sabtu & Minggu</small></article>
+        </div>
+        <div class="content-grid">
+          <section class="panel calendar-panel">
+            <div class="panel-heading"><div><h3>Overtime calendar</h3><p class="muted">Klik tanggal untuk melihat agenda.</p></div><div class="calendar-controls"><button id="prevMonth" class="icon-btn" aria-label="Bulan sebelumnya">‹</button><strong id="calendarLabel"></strong><button id="nextMonth" class="icon-btn" aria-label="Bulan berikutnya">›</button></div></div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="legend"><span><i class="legend-dot pra"></i> Prafinda</span><span><i class="legend-dot ahz"></i> Ahzka</span></div>
+          </section>
+          <section class="panel upcoming-panel">
+            <div class="panel-heading"><div><h3>Upcoming schedules</h3><p class="muted">Agenda terdekat tim.</p></div></div>
+            <div id="upcomingList" class="upcoming-list"><div class="empty-state">Belum ada jadwal lembur.</div></div>
+          </section>
+        </div>
+        <section class="panel breakdown-panel">
+          <div class="panel-heading"><div><h3>Overtime type breakdown</h3><p class="muted">Komposisi berdasarkan jenis lembur.</p></div></div>
+          <div class="breakdown"><div class="break-row"><div><span>Weekdays</span><strong id="weekdayCount">0</strong></div><div class="bar-track"><i id="weekdayBar"></i></div></div><div class="break-row"><div><span>Weekend</span><strong id="weekendCount">0</strong></div><div class="bar-track"><i id="weekendBar" class="weekend-bar"></i></div></div></div>
+        </section>
+      </section>
+
+      <section id="schedulesPage" class="page hidden">
+        <div class="list-toolbar"><div><h2>All schedules</h2><p class="muted">Kelola seluruh agenda lembur tim.</p></div><button class="primary" id="addSchedule">＋ Add Schedule</button></div>
+        <div class="filters">
+          <input id="searchInput" type="search" placeholder="Cari agenda atau nama anggota…">
+          <select id="memberFilter"><option value="">Semua anggota</option><option>Prafinda</option><option>Ahzka</option></select>
+          <select id="typeFilter"><option value="">Semua jenis</option><option>Weekdays</option><option>Weekend</option></select>
+          <input id="listMonth" type="month" aria-label="Filter bulan">
+        </div>
+        <div class="panel table-panel"><div class="table-scroll"><table><thead><tr><th>Tanggal</th><th>Anggota</th><th>Jenis</th><th>Agenda</th><th class="actions-head">Aksi</th></tr></thead><tbody id="scheduleRows"><tr><td colspan="5" class="empty-state">Belum ada data.</td></tr></tbody></table></div></div>
+      </section>
+      <footer>OMS LDT <span>•</span> Shared team workspace</footer>
+    </main>
+  </div>
+
+  <dialog id="scheduleDialog" class="schedule-dialog">
+    <form id="scheduleForm" method="dialog">
+      <div class="dialog-heading"><div><p class="eyebrow">OVERTIME ENTRY</p><h2 id="dialogTitle">Add schedule</h2></div><button type="button" id="closeDialog" class="icon-btn" aria-label="Tutup">×</button></div>
+      <input type="hidden" id="scheduleId">
+      <label>Tanggal lembur<input id="scheduleDate" type="date" required></label>
+      <label>Nama anggota<select id="scheduleMember" required><option value="">Pilih anggota</option><option>Prafinda</option><option>Ahzka</option></select></label>
+      <label>Jenis lembur<select id="scheduleType" required><option value="">Pilih jenis</option><option>Weekdays</option><option>Weekend</option></select><small class="field-hint">Jenis terisi otomatis mengikuti hari pada tanggal yang dipilih. Bisa diubah manual.</small></label>
+      <label>Agenda / pekerjaan<textarea id="scheduleAgenda" rows="4" maxlength="1000" required placeholder="Contoh: Regression testing NDP release…"></textarea></label>
+      <p id="formMessage" class="message" aria-live="polite"></p>
+      <div class="dialog-actions"><button type="button" id="cancelDialog" class="secondary">Cancel</button><button type="submit" id="saveSchedule" class="primary">Save schedule</button></div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
