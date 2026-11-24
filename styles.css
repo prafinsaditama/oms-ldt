@@ -85,3 +85,30 @@
 
 .member-option{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .member-option>label{display:flex;align-items:center;gap:8px;margin:0;cursor:pointer}
+
+/* Calendar - Date with Agenda */
+
+.day-cell.has-agenda {
+    background: #fff0e8;
+    border-left: 3px solid #16a36a;
+    border-color: #f2d4c5;
+    border-left-color: #16a36a;
+    transition: background 0.2s ease;
+}
+
+.day-cell.has-agenda:hover {
+    background: #ffe4d5;
+    border-left-color: #128653;
+}
+
+/* Selected date */
+.day-cell.has-agenda.selected {
+    background: #e8f1ff;
+    border-color: #3b82f6;
+    border-left: 3px solid #16a36a;
+}
+
+/* Preserve outside month appearance */
+.day-cell.outside.has-agenda {
+    opacity: 0.55;
+}
