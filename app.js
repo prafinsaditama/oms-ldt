@@ -432,16 +432,46 @@ $("cancelDialog").addEventListener("click",()=>dialog.close());
 $("quickAdd").addEventListener("click",()=>openForm());
 $("addSchedule").addEventListener("click",()=>openForm());
 document.querySelectorAll(".nav-item").forEach(b=>b.addEventListener("click",()=>switchPage(b.dataset.page)));
-$("dashboardMonth").value=monthValue(new Date());
-$("listMonth").value="";
-$("dashboardMonth").addEventListener("change",renderDashboard);
-$("prevMonth").addEventListener("click",()=>{
- calendarDate.setMonth(calendarDate.getMonth()-1);
- renderCalendar();
+// Dashboard period & calendar synchronization
+$("dashboardMonth").value = monthValue(new Date());
+$("listMonth").value = "";
+
+// Ketika filter periode berubah, kalender mengikuti.
+$("dashboardMonth").addEventListener("change", () => {
+  const value = $("dashboardMonth").value;
+  if (!value) return;
+
+  const [year, month] = value.split("-").map(Number);
+
+  calendarDate = new Date(year, month - 1, 1);
+
+  renderDashboard();
 });
-$("nextMonth").addEventListener("click",()=>{
- calendarDate.setMonth(calendarDate.getMonth()+1);
- renderCalendar();
+
+// Ketika kalender mundur, filter periode ikut berubah.
+$("prevMonth").addEventListener("click", () => {
+  calendarDate = new Date(
+    calendarDate.getFullYear(),
+    calendarDate.getMonth() - 1,
+    1
+  );
+
+  $("dashboardMonth").value = monthValue(calendarDate);
+
+  renderDashboard();
+});
+
+// Ketika kalender maju, filter periode ikut berubah.
+$("nextMonth").addEventListener("click", () => {
+  calendarDate = new Date(
+    calendarDate.getFullYear(),
+    calendarDate.getMonth() + 1,
+    1
+  );
+
+  $("dashboardMonth").value = monthValue(calendarDate);
+
+  renderDashboard();
 });
 ["searchInput","memberFilter","typeFilter","listMonth"].forEach(id=>$(id).addEventListener("input",renderTable));
 
