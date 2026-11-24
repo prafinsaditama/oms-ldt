@@ -381,6 +381,7 @@ function switchPage(page){
  $("schedulesPage").classList.toggle("hidden",page!=="schedules");
  $("pageTitle").textContent=page==="dashboard"?"Dashboard":"Overtime Schedule";
  document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+ closeMobileNavigation();
 }
 
 async function init(){
@@ -432,6 +433,25 @@ $("cancelDialog").addEventListener("click",()=>dialog.close());
 $("quickAdd").addEventListener("click",()=>openForm());
 $("addSchedule").addEventListener("click",()=>openForm());
 document.querySelectorAll(".nav-item").forEach(b=>b.addEventListener("click",()=>switchPage(b.dataset.page)));
+const mobileNavToggle=$("mobileNavToggle");
+const sidebar=document.querySelector(".sidebar");
+function closeMobileNavigation(){
+ if(!sidebar||!mobileNavToggle)return;
+ sidebar.classList.remove("mobile-open");
+ mobileNavToggle.setAttribute("aria-expanded","false");
+ mobileNavToggle.setAttribute("aria-label","Buka menu navigasi");
+ mobileNavToggle.textContent="☰";
+}
+if(mobileNavToggle){
+ mobileNavToggle.addEventListener("click",()=>{
+  const isOpen=sidebar.classList.toggle("mobile-open");
+  mobileNavToggle.setAttribute("aria-expanded",String(isOpen));
+  mobileNavToggle.setAttribute("aria-label",isOpen?"Tutup menu navigasi":"Buka menu navigasi");
+  mobileNavToggle.textContent=isOpen?"×":"☰";
+ });
+ document.addEventListener("keydown",event=>{if(event.key==="Escape")closeMobileNavigation();});
+ window.addEventListener("resize",()=>{if(window.innerWidth>700)closeMobileNavigation();});
+}
 $("dashboardMonth").value=monthValue(new Date());
 $("listMonth").value="";
 $("dashboardMonth").addEventListener("change",renderDashboard);

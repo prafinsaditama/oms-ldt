@@ -29,9 +29,12 @@
   <div id="appView" class="app-shell hidden">
     <aside class="sidebar">
       <div class="brand"><div class="brand-icon"><img src="clock.svg" alt="OMS LDT"></div><div><strong>OMS LDT</strong><small>Overtime Management</small></div></div>
+      <button id="mobileNavToggle" class="mobile-nav-toggle" type="button" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="primaryNavigation">☰</button>
+      <nav id="primaryNavigation" class="primary-navigation" aria-label="Navigasi utama">
       <div class="nav-label">WORKSPACE</div>
       <button class="nav-item active" data-page="dashboard"><span>▦</span> Dashboard</button>
       <button class="nav-item" data-page="schedules"><span>▤</span> Overtime Schedule</button>
+      </nav>
       <div class="sidebar-bottom">
         <div class="user-chip"><div class="avatar" id="userAvatar">U</div><div class="user-meta"><strong id="userName">User</strong><small id="userEmail"></small></div></div>
         <button id="logoutBtn" class="logout">↪ Sign out</button>
