@@ -105,7 +105,10 @@ function renderCalendar(){
   else if(n>days){d=new Date(year,month+1,n-days);outside=true;}
   else d=new Date(year,month,n);
   const key=dateOnly(d), items=schedules.filter(x=>x.overtime_date===key), today=key===dateOnly(new Date()), selected=key===selectedDate;
-  html+=`<button class="day-cell ${outside?"outside":""} ${today?"today":""} ${selected?"selected":""}" data-date="${key}" type="button"><span class="day-number">${d.getDate()}</span><span class="day-dots">${items.map(x=>`<i class="${x.member==="Prafinda"?"pra":"ahz"}" title="${escapeHTML(x.member)}"></i>`).join("")}</span></button>`;
+  html+=`<button class="day-cell ${outside?"outside":""} ${today?"today":""} ${selected?"selected":""} ${items.length?"has-agenda":""}" data-date="${key}" type="button">
+  <span class="day-number">${d.getDate()}</span>
+  <span class="day-dots">${items.map(x=>`<i class="${x.member==="Prafinda"?"pra":"ahz"}" title="${escapeHTML(x.member)}"></i>`).join("")}</span>
+</button>`;
  }
  $("calendarGrid").innerHTML=html;
  $("calendarGrid").querySelectorAll("[data-date]").forEach(b=>b.addEventListener("click",()=>{
