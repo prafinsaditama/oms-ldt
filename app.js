@@ -117,7 +117,7 @@ function renderCalendar(){
  }));
 }
 
-function isReimbursementEligible(item){ return item.overtime_type === "Weekdays" && item.work_location === "WFO"; }
+function isReimbursementEligible(item){ return item.overtime_type === "Weekdays" && item.work_location === "WFH"; }
 function reimbursementLabel(item){
  if(!isReimbursementEligible(item)) return "N/A";
  const labels={not_submitted:"Belum Diajukan",processing:"Proses",done:"Done"};
@@ -301,7 +301,7 @@ async function saveForm(e){
    return;
   }
   const selectedType=manualType==="Auto"?typeFromDate(date):manualType;
-  const eligible=selectedType==="Weekdays" && $("scheduleLocation").value==="WFO";
+  const eligible=selectedType==="Weekdays" && $("scheduleLocation").value==="WFH";
   const status=$("reimbursementStatus").value;
   const submitted=$("reimbursementSubmittedAt").value;
   const received=$("reimbursementReceivedAt").value;
@@ -313,9 +313,9 @@ async function saveForm(e){
    overtime_type:manualType==="Auto"?typeFromDate(date):manualType,
    work_location:$("scheduleLocation").value,
    agenda,
-   reimbursement_status: (manualType==="Auto"?typeFromDate(date):manualType)==="Weekdays" && $("scheduleLocation").value==="WFO" ? $("reimbursementStatus").value : null,
-   reimbursement_submitted_at: (manualType==="Auto"?typeFromDate(date):manualType)==="Weekdays" && $("scheduleLocation").value==="WFO" ? ($("reimbursementSubmittedAt").value||null) : null,
-   reimbursement_received_at: (manualType==="Auto"?typeFromDate(date):manualType)==="Weekdays" && $("scheduleLocation").value==="WFO" ? ($("reimbursementReceivedAt").value||null) : null,
+   reimbursement_status: (manualType==="Auto"?typeFromDate(date):manualType)==="Weekdays" && $("scheduleLocation").value==="WFH" ? $("reimbursementStatus").value : null,
+   reimbursement_submitted_at: (manualType==="Auto"?typeFromDate(date):manualType)==="Weekdays" && $("scheduleLocation").value==="WFH" ? ($("reimbursementSubmittedAt").value||null) : null,
+   reimbursement_received_at: (manualType==="Auto"?typeFromDate(date):manualType)==="Weekdays" && $("scheduleLocation").value==="WFH" ? ($("reimbursementReceivedAt").value||null) : null,
    updated_at:new Date().toISOString()
   }];
  }else{
@@ -330,7 +330,7 @@ async function saveForm(e){
    member,
    overtime_type:manualType==="Auto"?typeFromDate(date):manualType,
    work_location:document.querySelector(`.member-location[data-member="${member}"]`).value,
-   reimbursement_status:(manualType==="Auto"?typeFromDate(date):manualType)==="Weekdays" && document.querySelector(`.member-location[data-member="${member}"]`).value==="WFO" ? "not_submitted" : null,
+   reimbursement_status:(manualType==="Auto"?typeFromDate(date):manualType)==="Weekdays" && document.querySelector(`.member-location[data-member="${member}"]`).value==="WFH" ? "not_submitted" : null,
    reimbursement_submitted_at:null,
    reimbursement_received_at:null,
    agenda,
